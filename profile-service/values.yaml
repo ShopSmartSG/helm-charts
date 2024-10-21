@@ -120,4 +120,14 @@ nodeSelector: {}
 
 tolerations: []
 
-affinity: {}
+#ideally should be ss1
+#but putting it in traefik machines temporarily
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: "ng_id"
+              operator: In
+              values:
+                - "ss-traefik"
