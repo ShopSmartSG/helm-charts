@@ -133,3 +133,9 @@ affinity:
               operator: In
               values:
                 - "ss-traefik"
+
+filebeat:
+  enabled: true
+  image:
+    repository: docker.elastic.co/beats/filebeat
+    tag: 7.14.1
