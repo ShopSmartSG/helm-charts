@@ -126,6 +126,12 @@ data:
           index => "order-service-logs"
           action => "create"
         }
+      }else if [fields][service] == "otp-service" {
+        elasticsearch {
+          hosts => ["elasticsearch:9200"]
+          index => "otp-service-logs"
+          action => "create"
+        }
       }
       stdout { codec => rubydebug }
       file {

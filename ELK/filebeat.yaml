@@ -39,6 +39,13 @@ data:
           - /var/log/central-hub/central-hub.log  # New log path for central hub(shopsmartsg-backend)
         fields:
           service: central-hub
+    
+      - type: log
+        enabled: true
+        paths:
+          - /var/log/otp-service/otp-service.log  # New log path for otp-service
+        fields:
+          service: otp-service
 
     output.logstash:
       hosts: ["logstash:5044"]
