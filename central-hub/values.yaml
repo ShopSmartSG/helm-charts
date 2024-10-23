@@ -58,20 +58,37 @@ service:
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
-  enabled: true
-#  className: ""
-  annotations:
-    kubernetes.io/ingress.class: traefik-private
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: central-hub.ss.aws.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+  private:
+    name: central-hub-private
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: traefik-private
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: central-hub.ss.aws.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: [ ]
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+  public:
+    name: central-hub-public
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: traefik-public
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: central-hub.shopsmartsg.com
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: [ ]
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
