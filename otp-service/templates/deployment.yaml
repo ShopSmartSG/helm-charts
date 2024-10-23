@@ -50,14 +50,27 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- with .Values.volumeMounts }}
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- with .Values.volumes }}
+            - name: log-volume
+              mountPath: /var/log/otp-service
+        {{- if .Values.filebeat.enabled }}
+        - name: filebeat
+          image: "{{ .Values.filebeat.image.repository }}:{{ .Values.filebeat.image.tag }}"
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: log-volume
+              mountPath: /var/log/otp-service
+            - name: filebeat-config
+              mountPath: /usr/share/filebeat/filebeat.yml
+              subPath: filebeat.yml
+        {{- end }}
       volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        - name: log-volume
+          emptyDir: {}
+        - name: filebeat-config
+          configMap:
+            name: filebeat-config
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
