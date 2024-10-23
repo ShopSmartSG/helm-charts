@@ -29,6 +29,15 @@ spec:
                   fieldPath: metadata.name
             - name: network.host
               value: "0.0.0.0"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: "ng_id"
+                    operator: In
+                    values:
+                      - "ss-elk"
 ---
 apiVersion: v1
 kind: Service

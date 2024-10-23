@@ -24,6 +24,15 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /usr/share/logstash/pipeline/
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: "ng_id"
+                    operator: In
+                    values:
+                      - "ss-elk"
       volumes:
         - name: config-volume
           configMap:
