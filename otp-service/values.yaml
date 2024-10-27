@@ -129,10 +129,10 @@ affinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
         - matchExpressions:
-            - key: "ng_id"
+            - key: "services"
               operator: In
               values:
-                - "ss-traefik"
+                - "true"
 
 filebeat:
   enabled: true

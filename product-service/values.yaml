@@ -123,16 +123,16 @@ nodeSelector: {}
 tolerations: []
 
 #ideally should be ss1
-#but putting it in traefik machines temporarily
+#but putting it in ss-traefik machines temporarily
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
         - matchExpressions:
-            - key: "ng_id"
+            - key: "services"
               operator: In
               values:
-                - "ss-traefik"
+                - "true"
 
 filebeat:
   enabled: true
