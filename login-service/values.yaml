@@ -1,4 +1,4 @@
-# Default values for central-hub.
+# Default values for login-service.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -7,8 +7,8 @@ replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: asia-southeast1-docker.pkg.dev/psychic-heading-449012-r6/central-hub/central-hub
-#  repository: public.ecr.aws/l8p8t6p2/ss/shopsmartsg-backend
+  repository: asia-southeast1-docker.pkg.dev/psychic-heading-449012-r6/login-service/login-service
+#  repository: public.ecr.aws/l8p8t6p2/ss/login-service
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
@@ -18,7 +18,7 @@ image:
 imagePullSecrets: []
 # This is to override the chart name.
 nameOverride: ""
-fullnameOverride: "central-hub"
+fullnameOverride: "login-service"
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
@@ -55,41 +55,24 @@ service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 82
+  port: 98
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
-  private:
-    name: central-hub-private
-    enabled: false
-    annotations:
-      kubernetes.io/ingress.class: traefik-private
-      # kubernetes.io/tls-acme: "true"
-    hosts:
-      - host: central-hub.ss.aws.local
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
-    tls: [ ]
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
-
-  public:
-    name: central-hub-public
-    enabled: false
-    annotations:
-      kubernetes.io/ingress.class: traefik-public
-      # kubernetes.io/tls-acme: "true"
-    hosts:
-      - host: central-hub.shopsmartsg.com
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
-    tls:
-      - secretName: central-hub-tls
-        hosts:
-          - central-hub.shopsmartsg.com
+  enabled: false
+#  className: ""
+  annotations:
+    kubernetes.io/ingress.class: traefik-private
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: login-service.ss.aws.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -140,7 +123,7 @@ nodeSelector: {}
 
 tolerations: []
 
-#ideally should be "ng_id" for "ss1"
+#ideally should be ss1
 #but putting it in traefik machines temporarily
 affinity:
   nodeAffinity:
