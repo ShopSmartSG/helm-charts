@@ -29,10 +29,14 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
+                  - key: "purpose"
+                    operator: In
+                    values:
+                      - "general"
                   - key: "ng_id"
                     operator: In
                     values:
-                      - "ss-elk"
+                      - "ss1"
       volumes:
         - name: config-volume
           configMap:

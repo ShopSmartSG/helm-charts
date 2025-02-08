@@ -130,13 +130,17 @@ affinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
         - matchExpressions:
-            - key: "services"
+            - key: "purpose"
               operator: In
               values:
-                - "true"
+                - "general"
+            - key: "ng_id"
+              operator: In
+              values:
+                - "ss1"
 
 filebeat:
-  enabled: true
+  enabled: false
   image:
     repository: docker.elastic.co/beats/filebeat
     tag: 7.14.1
