@@ -19,6 +19,12 @@ spec:
             - containerPort: 5044
             - containerPort: 9600
           env:
+            - name: ELASTICSEARCH_HOSTS
+              value: "http://elasticsearch:9200"
+            - name: ELASTICSEARCH_USERNAME
+              value: "elastic"
+            - name: ELASTICSEARCH_PASSWORD
+              value: "JCqMRkJeXOH8NLVKCYcf"
             - name: LS_JAVA_OPTS
               value: "-Xmx512m -Xms512m"
           volumeMounts:
@@ -102,36 +108,48 @@ data:
     output {
       if [fields][service] == "profile-service" {
         elasticsearch {
+          user => "elastic"
+          password => "JCqMRkJeXOH8NLVKCYcf"
           hosts => ["elasticsearch:9200"]
           index => "profile-service-logs"
           action => "create"
         }
       } else if [fields][service] == "utility-service" {
         elasticsearch {
+          user => "elastic"
+          password => "JCqMRkJeXOH8NLVKCYcf"
           hosts => ["elasticsearch:9200"]
           index => "utility-service-logs"
           action => "create"
         }
       } else if [fields][service] == "central-hub" {
         elasticsearch {
+          user => "elastic"
+          password => "JCqMRkJeXOH8NLVKCYcf"
           hosts => ["elasticsearch:9200"]
           index => "central-hub-logs"
           action => "create"
         }
       } else if [fields][service] == "product-service" {
         elasticsearch {
+          user => "elastic"
+          password => "JCqMRkJeXOH8NLVKCYcf"
           hosts => ["elasticsearch:9200"]
           index => "product-service-logs"
           action => "create"
         }
       } else if [fields][service] == "order-service" {
         elasticsearch {
+          user => "elastic"
+          password => "JCqMRkJeXOH8NLVKCYcf"
           hosts => ["elasticsearch:9200"]
           index => "order-service-logs"
           action => "create"
         }
       }else if [fields][service] == "otp-service" {
         elasticsearch {
+          user => "elastic"
+          password => "JCqMRkJeXOH8NLVKCYcf"
           hosts => ["elasticsearch:9200"]
           index => "otp-service-logs"
           action => "create"

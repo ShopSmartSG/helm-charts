@@ -29,6 +29,8 @@ spec:
                   fieldPath: metadata.name
             - name: network.host
               value: "0.0.0.0"
+            - name: ELASTIC_PASSWORD
+              value: "JCqMRkJeXOH8NLVKCYcf"
             - name: xpack.security.enabled
               value: "true"
       affinity:
