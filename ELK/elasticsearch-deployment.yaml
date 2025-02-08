@@ -41,11 +41,11 @@ spec:
                   - key: "purpose"
                     operator: In
                     values:
-                      - "general"
-                  - key: "ng_id"
+                      - "elk"
+                  - key: "set"
                     operator: In
                     values:
-                      - "ss1"
+                      - "ss-elk"
 ---
 apiVersion: v1
 kind: Service

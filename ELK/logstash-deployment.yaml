@@ -38,11 +38,11 @@ spec:
                   - key: "purpose"
                     operator: In
                     values:
-                      - "general"
-                  - key: "ng_id"
+                      - "elk"
+                  - key: "set"
                     operator: In
                     values:
-                      - "ss1"
+                      - "ss-elk"
       volumes:
         - name: config-volume
           configMap:
