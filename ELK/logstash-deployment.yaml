@@ -65,48 +65,106 @@ data:
     }
 
     filter {
-      grok {
-        match => { 
-          "message" => [
-            "%{TIME:timestamp} \[%{DATA:thread}\] %{LOGLEVEL:loglevel}\s+%{JAVAFILE:class} - %{GREEDYDATA:json_message}",
-            "%{TIMESTAMP_ISO8601:timestamp} %{LOGLEVEL:loglevel} %{JAVACLASS:class}: %{GREEDYDATA:json_message}",
-            "%{LOGLEVEL:loglevel} %{GREEDYDATA:json_message}",
-            "%{TIME:timestamp} \[%{DATA:thread}\] %{LOGLEVEL:loglevel}\s+%{JAVAFILE:class} - %{GREEDYDATA:log_message}",
-            "%{TIMESTAMP_ISO8601:timestamp} %{LOGLEVEL:loglevel} %{JAVACLASS:class}: %{GREEDYDATA:log_message}",
-            "%{LOGLEVEL:loglevel} %{GREEDYDATA:log_message}"
-          ] 
-        }
-        tag_on_failure => ["_grokparsefailure"]
-      }
-
-      # Add a logtype field based on the loglevel
-      if "_grokparsefailure" not in [tags] {
+      if [event][module] == "gcp" {
         mutate {
-          add_field => { "logtype" => "%{loglevel}" }
+          add_field => {
+            "[@metadata][event_type]" => "%{[event][dataset]}"
+          }
         }
-    
-        
-        if [logtype] == "ERROR" {
-          mutate {
-            add_field => { "error_flag" => "true" }
+
+        if [event][dataset] == "gcp.firewall" {
+          elasticsearch {
+            hosts => ["elasticsearch:9200"]
+            user => "elastic"
+            password => "JCqMRkJeXOH8NLVKCYcf"
+            index => "gcp-infra-firewall-%{+YYYY.MM.dd}"
+            ssl => false
+          }
+        } else if [event][dataset] == "gcp.vpcflow" {
+          elasticsearch {
+            hosts => ["elasticsearch:9200"]
+            user => "elastic"
+            password => "JCqMRkJeXOH8NLVKCYcf"
+            index => "gcp-infra-vpcflow-%{+YYYY.MM.dd}"
+            ssl => false
+          }
+        } else if [event][dataset] == "gcp.audit" {
+          elasticsearch {
+            hosts => ["elasticsearch:9200"]
+            user => "elastic"
+            password => "JCqMRkJeXOH8NLVKCYcf"
+            index => "gcp-infra-audit-%{+YYYY.MM.dd}"
+            ssl => false
           }
         }
       } else {
+        # Application logs processing
+        grok {
+          match => { 
+            "message" => [
+              "%{TIME:timestamp} \[%{DATA:thread}\] %{LOGLEVEL:loglevel}\s+%{JAVAFILE:class} - %{GREEDYDATA:json_message}",
+              "%{TIMESTAMP_ISO8601:timestamp} %{LOGLEVEL:loglevel} %{JAVACLASS:class}: %{GREEDYDATA:json_message}",
+              "%{LOGLEVEL:loglevel} %{GREEDYDATA:json_message}",
+              "%{TIME:timestamp} \[%{DATA:thread}\] %{LOGLEVEL:loglevel}\s+%{JAVAFILE:class} - %{GREEDYDATA:log_message}",
+              "%{TIMESTAMP_ISO8601:timestamp} %{LOGLEVEL:loglevel} %{JAVACLASS:class}: %{GREEDYDATA:log_message}",
+              "%{LOGLEVEL:loglevel} %{GREEDYDATA:log_message}"
+            ] 
+          }
+          tag_on_failure => ["_grokparsefailure"]
+        }
+
+        if "_grokparsefailure" not in [tags] {
+          mutate {
+            add_field => { "logtype" => "%{loglevel}" }
+          }
+    
+          if [logtype] == "ERROR" {
+            mutate {
+              add_field => { "error_flag" => "true" }
+            }
+          }
+        } else {
           mutate {
             add_field => { "logtype" => "UNMATCHED" }
+          }
         }
-     }
-    
-      # Add the original message for unmatched logs
-      if "_grokparsefailure" in [tags] {
-        mutate {
-          add_field => { "original_message" => "%{message}" }
+
+        if "_grokparsefailure" in [tags] {
+          mutate {
+            add_field => { "original_message" => "%{message}" }
+          }
         }
       }
     }
     
     output {
-      if [fields][service] == "profile-service" {
+      if [event][module] == "gcp" {
+        if [event][dataset] == "gcp.firewall" {
+          elasticsearch {
+            hosts => ["elasticsearch:9200"]
+            user => "elastic"
+            password => "JCqMRkJeXOH8NLVKCYcf"
+            index => "gcp-infra-firewall-%{+YYYY.MM.dd}"
+            ssl => false
+          }
+        } else if [event][dataset] == "gcp.vpcflow" {
+          elasticsearch {
+            hosts => ["elasticsearch:9200"]
+            user => "elastic"
+            password => "JCqMRkJeXOH8NLVKCYcf"
+            index => "gcp-infra-vpcflow-%{+YYYY.MM.dd}"
+            ssl => false
+          }
+        } else if [event][dataset] == "gcp.audit" {
+          elasticsearch {
+            hosts => ["elasticsearch:9200"]
+            user => "elastic"
+            password => "JCqMRkJeXOH8NLVKCYcf"
+            index => "gcp-infra-audit-%{+YYYY.MM.dd}"
+            ssl => false
+          }
+        }
+      } else if [fields][service] == "profile-service" {
         elasticsearch {
           user => "elastic"
           password => "JCqMRkJeXOH8NLVKCYcf"
@@ -146,7 +204,7 @@ data:
           index => "order-service-logs"
           action => "create"
         }
-      }else if [fields][service] == "otp-service" {
+      } else if [fields][service] == "otp-service" {
         elasticsearch {
           user => "elastic"
           password => "JCqMRkJeXOH8NLVKCYcf"
@@ -154,11 +212,15 @@ data:
           index => "otp-service-logs"
           action => "create"
         }
-      }
-      stdout { codec => rubydebug }
-      file {
-        path => "/tmp/logstash.log"
-        codec => rubydebug
+      } else {
+        # Catch-all for unmatched logs
+        elasticsearch {
+          user => "elastic"
+          password => "JCqMRkJeXOH8NLVKCYcf"
+          hosts => ["elasticsearch:9200"]
+          index => "unmatched-logs-%{+YYYY.MM.dd}"
+          action => "create"
+        }
       }
     }
   logstash.yml: |

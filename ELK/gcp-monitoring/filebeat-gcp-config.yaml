@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: filebeat-gcp-config
+ namespace: default
+data:
+ filebeat.yml: |
+   filebeat.modules:
+     - module: gcp
+       enabled: true
+       audit:
+         enabled: true
+         var.project_id: "psychic-heading-449012-r6"
+         var.credentials_file: "/etc/gcp/psychic-heading-449012-r6-71b55b565dfb.json"
+         var.topic: "stackdriver-audit"
+         var.subscription_name: "audit-logs-sub"
+       vpcflow:
+         enabled: true
+         var.project_id: "psychic-heading-449012-r6"
+         var.credentials_file: "/etc/gcp/psychic-heading-449012-r6-71b55b565dfb.json"
+         var.topic: "stackdriver-vpcflow"
+         var.subscription_name: "filebeat-gcp-vpcflow"
+         var.log_name: "projects/psychic-heading-449012-r6/logs/compute.googleapis.com%2Fvpc_flows"
+         var.location_zone: "asia-southeast1-a"
+         var.location_region: "asia-southeast1"
+       firewall:
+         enabled: true
+         var.project_id: "psychic-heading-449012-r6"
+         var.credentials_file: "/etc/gcp/psychic-heading-449012-r6-71b55b565dfb.json"
+         var.topic: "stackdriver-firewall"
+         var.subscription_name: "filebeat-gcp-firewall"
+         var.index_suffix: "firewall"
+
+   processors:
+     - add_cloud_metadata: ~
+     - add_host_metadata: ~
+     - decode_json_fields:
+         fields: ["message"]
+         target: "json"
+         overwrite_keys: true
+
+   logging.level: debug
+   logging.to_stderr: true
+   logging.metrics.enabled: true
+   logging.selectors: ["gcp", "pubsub", "input", "publisher", "beat", "processor"]
+
+   output.logstash:
+     hosts: ["logstash:5044"]
+     ssl.enabled: false
+     index: "gcp-firewall-%{+yyyy.MM.dd}"

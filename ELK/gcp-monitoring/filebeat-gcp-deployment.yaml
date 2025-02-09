@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: filebeat-gcp
+ namespace: default
+ labels:
+   app: filebeat-gcp
+spec:
+ replicas: 1
+ selector:
+   matchLabels:
+     app: filebeat-gcp
+ template:
+   metadata:
+     labels:
+       app: filebeat-gcp
+     annotations:
+       iam.gke.io/gcp-service-account: filebeat-sa@psychic-heading-449012-r6.iam.gserviceaccount.com
+       co.elastic.logs/enabled: "true"
+       co.elastic.logs/json.keys_under_root: "true"
+       co.elastic.logs/json.add_error_key: "true"
+       co.elastic.logs/json.message_key: "message"
+   spec:
+     serviceAccountName: filebeat-ksa
+     containers:
+     - name: filebeat
+       image: docker.elastic.co/beats/filebeat:7.17.0
+       args: ["-c", "/etc/filebeat.yml", "-e"]
+       env:
+       - name: NODE_NAME
+         valueFrom:
+           fieldRef:
+             fieldPath: spec.nodeName
+       resources:
+         limits:
+           memory: "200Mi"
+           cpu: "500m"
+         requests:
+           memory: "100Mi"
+           cpu: "100m"
+       volumeMounts:
+       - name: config
+         mountPath: /etc/filebeat.yml
+         subPath: filebeat.yml
+       - name: filebeat-logs
+         mountPath: /var/log/filebeat
+       - name: gcp-credentials
+         mountPath: /etc/gcp
+         readOnly: true
+     volumes:
+     - name: config
+       configMap:
+         name: filebeat-gcp-config
+     - name: filebeat-logs
+       emptyDir: {}
+     - name: gcp-credentials
+       secret:
+         secretName: filebeat-gcp-credentials
