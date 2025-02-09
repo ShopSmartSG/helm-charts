@@ -27,6 +27,12 @@ spec:
               value: "JCqMRkJeXOH8NLVKCYcf"
             - name: LS_JAVA_OPTS
               value: "-Xmx512m -Xms512m"
+            - name: XPACK_MONITORING_ELASTICSEARCH_HOSTS
+              value: "http://elasticsearch:9200"
+            - name: XPACK_MONITORING_ELASTICSEARCH_USERNAME
+              value: "elastic"
+            - name: XPACK_MONITORING_ELASTICSEARCH_PASSWORD
+              value: "JCqMRkJeXOH8NLVKCYcf"
           volumeMounts:
             - name: config-volume
               mountPath: /usr/share/logstash/pipeline/
@@ -171,6 +177,7 @@ data:
           hosts => ["elasticsearch:9200"]
           index => "profile-service-logs"
           action => "create"
+          ssl => false
         }
       } else if [fields][service] == "utility-service" {
         elasticsearch {
@@ -179,6 +186,7 @@ data:
           hosts => ["elasticsearch:9200"]
           index => "utility-service-logs"
           action => "create"
+          ssl => false
         }
       } else if [fields][service] == "central-hub" {
         elasticsearch {
@@ -187,6 +195,7 @@ data:
           hosts => ["elasticsearch:9200"]
           index => "central-hub-logs"
           action => "create"
+          ssl => false
         }
       } else if [fields][service] == "product-service" {
         elasticsearch {
@@ -195,6 +204,7 @@ data:
           hosts => ["elasticsearch:9200"]
           index => "product-service-logs"
           action => "create"
+          ssl => false
         }
       } else if [fields][service] == "order-service" {
         elasticsearch {
@@ -203,6 +213,7 @@ data:
           hosts => ["elasticsearch:9200"]
           index => "order-service-logs"
           action => "create"
+          ssl => false
         }
       } else if [fields][service] == "otp-service" {
         elasticsearch {
@@ -211,6 +222,7 @@ data:
           hosts => ["elasticsearch:9200"]
           index => "otp-service-logs"
           action => "create"
+          ssl => false
         }
       } else {
         # Catch-all for unmatched logs
@@ -220,8 +232,11 @@ data:
           hosts => ["elasticsearch:9200"]
           index => "unmatched-logs-%{+YYYY.MM.dd}"
           action => "create"
+          ssl => false
         }
       }
+      
+      stdout { codec => rubydebug }
     }
   logstash.yml: |
     http.host: "0.0.0.0"
