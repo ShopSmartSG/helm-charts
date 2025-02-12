@@ -65,6 +65,20 @@ spec:
               mountPath: /usr/share/filebeat/filebeat.yml
               subPath: filebeat.yml
         {{- end }}
+      {{- if .Values.cloudsqlproxy.enabled }}
+      initContainers:
+        - name: cloud-sql-proxy
+          restartPolicy: Always
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
+          args:
+            - "--private-ip"
+            - "--auto-iam-authn"
+            - "--structured-logs"
+            - "--port=5432"
+            - "psychic-heading-449012-r6:asia-southeast1:shopsmart-sqldb"
+          securityContext:
+            runAsNonRoot: true
+      {{- end }}
       volumes:
         - name: log-volume
           emptyDir: {}
