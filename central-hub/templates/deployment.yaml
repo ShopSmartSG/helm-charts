@@ -53,6 +53,11 @@ spec:
           volumeMounts:
             - name: log-volume
               mountPath: /var/log/central-hub
+            {{- if .Values.redis.cert.enabled }}
+            - name: redis-ca-cert-pem
+              mountPath: /etc/redis/ssl/certs/
+              readOnly: true
+            {{- end }}
         {{- if .Values.filebeat.enabled }}
         - name: filebeat
           image: "{{ .Values.filebeat.image.repository }}:{{ .Values.filebeat.image.tag }}"
@@ -71,6 +76,11 @@ spec:
         - name: filebeat-config
           configMap:
             name: filebeat-config
+        {{- if .Values.redis.cert.enabled }}
+        - name: redis-ca-cert-pem
+          secret:
+              secretName: {{ .Values.redis.cert.secretName }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

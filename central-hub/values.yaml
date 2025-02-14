@@ -165,3 +165,8 @@ filebeat:
   image:
     repository: docker.elastic.co/beats/filebeat
     tag: 7.14.1
+
+redis:
+  cert:
+    enabled: true
+    secretName: redis-ca-cert
