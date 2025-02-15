@@ -44,4 +44,3 @@ data:
    output.logstash:
      hosts: ["logstash:5044"]
      ssl.enabled: false
-     index: "gcp-firewall-%{+yyyy.MM.dd}"
