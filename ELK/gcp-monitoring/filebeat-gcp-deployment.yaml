@@ -44,15 +44,9 @@ spec:
          subPath: filebeat.yml
        - name: filebeat-logs
          mountPath: /var/log/filebeat
-       - name: gcp-credentials
-         mountPath: /etc/gcp
-         readOnly: true
      volumes:
      - name: config
        configMap:
          name: filebeat-gcp-config
      - name: filebeat-logs
        emptyDir: {}
-     - name: gcp-credentials
-       secret:
-         secretName: filebeat-gcp-credentials
