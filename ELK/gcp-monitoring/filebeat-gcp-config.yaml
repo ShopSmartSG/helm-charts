@@ -10,20 +10,20 @@ data:
        enabled: true
        audit:
          enabled: true
-         var.project_id: "psychic-heading-449012-r6"
+         var.project_id: "shopsmartsg-451708"
          var.topic: "stackdriver-audit"
          var.subscription_name: "audit-logs-sub"
        vpcflow:
          enabled: true
-         var.project_id: "psychic-heading-449012-r6"
+         var.project_id: "shopsmartsg-451708"
          var.topic: "stackdriver-vpcflow"
          var.subscription_name: "filebeat-gcp-vpcflow"
-         var.log_name: "projects/psychic-heading-449012-r6/logs/compute.googleapis.com%2Fvpc_flows"
+         var.log_name: "projects/shopsmartsg-451708/logs/compute.googleapis.com%2Fvpc_flows"
          var.location_zone: "asia-southeast1-a"
          var.location_region: "asia-southeast1"
        firewall:
          enabled: true
-         var.project_id: "psychic-heading-449012-r6"
+         var.project_id: "shopsmartsg-451708"
          var.topic: "stackdriver-firewall"
          var.subscription_name: "filebeat-gcp-firewall"
          var.index_suffix: "firewall"

@@ -75,7 +75,7 @@ spec:
             - "--auto-iam-authn"
             - "--structured-logs"
             - "--port=5432"
-            - "psychic-heading-449012-r6:asia-southeast1:shopsmart-sqldb"
+            - "shopsmartsg-451708:asia-southeast1:shopsmart-sqldb"
           securityContext:
             runAsNonRoot: true
       {{- end }}

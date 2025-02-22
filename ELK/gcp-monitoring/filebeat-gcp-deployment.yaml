@@ -15,7 +15,7 @@ spec:
      labels:
        app: filebeat-gcp
      annotations:
-       iam.gke.io/gcp-service-account: filebeat-sa@psychic-heading-449012-r6.iam.gserviceaccount.com
+       iam.gke.io/gcp-service-account: filebeat-sa@shopsmartsg-451708.iam.gserviceaccount.com
        co.elastic.logs/enabled: "true"
        co.elastic.logs/json.keys_under_root: "true"
        co.elastic.logs/json.add_error_key: "true"
