@@ -18,22 +18,48 @@ spec:
           ports:
             - containerPort: 5601
           env:
-            - name: ELASTICSEARCH_HOSTS
-              value: "http://elasticsearch:9200"
-            - name: SERVER_SSL_ENABLED
-              value: "false"
             - name: SERVER_HOST
               value: "0.0.0.0"
-            - name: SERVER_PUBLICBASEURL
-              value: "http://kibana.shopsmartsg.com"
-            - name: XPACK_SECURITY_ENABLED
+            - name: SERVER_SSL_ENABLED
               value: "true"
+            - name: SERVER_SSL_CERTIFICATE
+              value: "/usr/share/kibana/config/certs/tls.crt"
+            - name: SERVER_SSL_KEY
+              value: "/usr/share/kibana/config/certs/tls.key"
+            - name: SERVER_PUBLICBASEURL
+              value: "https://localhost:5601"
+            - name: ELASTICSEARCH_HOSTS
+              value: "http://elasticsearch:9200"
             - name: ELASTICSEARCH_USERNAME
               value: "kibana_system"
             - name: ELASTICSEARCH_PASSWORD
               value: "NewPassword123"
+            - name: ELASTICSEARCH_SSL_VERIFICATIONMODE
+              value: "none"
+            - name: XPACK_SECURITY_ENABLED
+              value: "true"
+            - name: XPACK_SECURITY_AUTHC_PROVIDERS
+              value: '["basic"]'
+            - name: XPACK_SECURITY_PUBLIC_PROTOCOL
+              value: "https"
+            - name: XPACK_SECURITY_LOGINASSISTANCE_ENABLED
+              value: "true"
+            - name: XPACK_SECURITY_AUTHC_SELECTOR_ENABLED
+              value: "true"
             - name: SERVER_HEALTHCHECK_ALLOWANONYMOUS
               value: "true"
+            - name: XPACK_SECURITY_COOKIE_SECURE
+              value: "true"
+            - name: XPACK_SECURITY_SESSION_IDLETIMEOUT
+              value: "1h"
+            - name: XPACK_SECURITY_SESSION_LIFESPAN
+              value: "24h"
+            - name: XPACK_CSP_RULES
+              value: "script-src 'self' 'unsafe-eval' 'unsafe-inline'; connect-src 'self' http://localhost:5601 https://localhost:5601"
+            - name: XPACK_CSP_STRICT
+              value: "false"
+            - name: LOGGING_ROOT_LEVEL
+              value: "debug"
           resources:
             limits:
               cpu: "500m"
@@ -45,7 +71,7 @@ spec:
             httpGet:
               path: /api/status
               port: 5601
-              scheme: HTTP
+              scheme: HTTPS
               httpHeaders:
                 - name: Authorization
                   value: "Basic ZWxhc3RpYzpKQ3FNUmtKZVhPSDhOTFZLQ1ljZg=="
@@ -56,7 +82,7 @@ spec:
             httpGet:
               path: /api/status
               port: 5601
-              scheme: HTTP
+              scheme: HTTPS
               httpHeaders:
                 - name: Authorization
                   value: "Basic ZWxhc3RpYzpKQ3FNUmtKZVhPSDhOTFZLQ1ljZg=="
@@ -67,12 +93,20 @@ spec:
             httpGet:
               path: /api/status
               port: 5601
-              scheme: HTTP
+              scheme: HTTPS
               httpHeaders:
                 - name: Authorization
                   value: "Basic ZWxhc3RpYzpKQ3FNUmtKZVhPSDhOTFZLQ1ljZg=="
             failureThreshold: 30
             periodSeconds: 10
+          volumeMounts:
+            - name: kibana-certs
+              mountPath: /usr/share/kibana/config/certs
+              readOnly: true
+      volumes:
+        - name: kibana-certs
+          secret:
+            secretName: kibana-tls
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

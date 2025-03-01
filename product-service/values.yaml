@@ -140,7 +140,7 @@ affinity:
                 - "ss1"
 
 filebeat:
-  enabled: true
+  enabled: false
   image:
     repository: docker.elastic.co/beats/filebeat
     tag: 7.14.1
@@ -148,3 +148,6 @@ filebeat:
 cloudsqlproxy:
   enabled: true
   serviceAccountName: "ss-postgres-cloudsql-ksa"
+
+# GCP Credentials configuration
+gcpCredentials: ""  # Will be populated via --set-file during helm install/upgrade
