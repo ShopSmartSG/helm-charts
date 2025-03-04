@@ -27,10 +27,11 @@ serviceAccount:
   # Automatically mount a ServiceAccount's API credentials?
   automount: true
   # Annotations to add to the service account
-  annotations: {}
+  annotations:
+    iam.gke.io/gcp-service-account: utility-service-sa@shopsmartsg-451708.iam.gserviceaccount.com
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  name: "utility-service"
 
 # This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
@@ -148,3 +149,14 @@ filebeat:
   image:
     repository: docker.elastic.co/beats/filebeat
     tag: 7.14.1
+
+# charts/utility-service/values.yaml
+secretManager:
+  enabled: true
+  projectId: "shopsmartsg-451708"
+  secrets:
+    - name: "utility-service-google-maps-api-key"
+      path: "google-maps-api-key"
+  envFrom:
+    - env: "GOOGLE_MAPS_API_KEY"
+      secretKey: "google-maps-api-key"

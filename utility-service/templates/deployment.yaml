@@ -53,6 +53,21 @@ spec:
           volumeMounts:
             - name: log-volume
               mountPath: /var/log/utility-service
+            {{- if .Values.secretManager.enabled }}
+            - name: secrets-store
+              mountPath: "/mnt/secrets"
+              readOnly: true
+            {{- end }}
+          {{- if and .Values.secretManager.enabled .Values.secretManager.envFrom }}
+          env:
+            {{- range .Values.secretManager.envFrom }}
+            - name: {{ .env }}
+              valueFrom:
+                secretKeyRef:
+                  name: utility-service-secrets
+                  key: {{ .secretKey }}
+            {{- end }}
+          {{- end }}
         {{- if .Values.filebeat.enabled }}
         - name: filebeat
           image: "{{ .Values.filebeat.image.repository }}:{{ .Values.filebeat.image.tag }}"
@@ -64,13 +79,38 @@ spec:
             - name: filebeat-config
               mountPath: /usr/share/filebeat/filebeat.yml
               subPath: filebeat.yml
+            {{- if .Values.secretManager.enabled }}
+            - name: secrets-store
+              mountPath: "/mnt/secrets"
+              readOnly: true
+            {{- end }}
+          {{- if and .Values.secretManager.enabled .Values.secretManager.envFrom }}
+          env:
+            {{- range .Values.secretManager.envFrom }}
+            - name: {{ .env }}
+              valueFrom:
+                secretKeyRef:
+                  name: utility-service-secrets
+                  key: {{ .secretKey }}
+            {{- end }}
+          {{- end }}
         {{- end }}
       volumes:
         - name: log-volume
           emptyDir: {}
+        {{- if .Values.filebeat.enabled }}
         - name: filebeat-config
           configMap:
             name: filebeat-config
+        {{- end }}
+        {{- if .Values.secretManager.enabled }}
+        - name: secrets-store
+          csi:
+            driver: secrets-store-gke.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: utility-service-secrets
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
