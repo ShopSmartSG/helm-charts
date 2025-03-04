@@ -150,3 +150,17 @@ filebeat:
   image:
     repository: docker.elastic.co/beats/filebeat
     tag: 7.14.1
+
+secretManager:
+  enabled: true
+  projectId: "shopsmartsg-451708"
+  secrets:
+    - name: "order-service-order-database-password"
+      path: "order-database-password"
+    - name: "order-service-cart-database-password"
+      path: "cart-database-password"
+  envFrom:
+    - env: "ORDER_PASSWORD"
+      secretKey: "order-database-password"
+    - env: "CART_PASSWORD"
+      secretKey: "cart-database-password"
