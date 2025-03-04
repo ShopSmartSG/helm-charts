@@ -132,6 +132,10 @@ affinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
         - matchExpressions:
+#            - key: "services"
+#              operator: In
+#              values:
+#                - "true"
             - key: "purpose"
               operator: In
               values:
@@ -151,5 +155,14 @@ cloudsqlproxy:
   enabled: true
   serviceAccountName: "ss-postgres-cloudsql-ksa"
 
-# GCP Credentials configuration
-gcpCredentials: ""  # Will be populated via --set-file during helm install/upgrade
+secretManager:
+  enabled: true
+  projectId: "shopsmartsg-451708"
+  secrets:
+    - name: "product-service-database-password"
+      path: "database-password"
+    - name: "product-svc-account-credentials"
+      path: "product-svc-account-credentials"
+  envFrom:
+    - env: "SPRING_DATASOURCE_PASSWORD"
+      secretKey: "database-password"

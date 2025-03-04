@@ -53,6 +53,27 @@ spec:
           volumeMounts:
             - name: log-volume
               mountPath: /var/log/product-service
+            {{- if .Values.secretManager.enabled }}
+            - name: secrets-store
+              mountPath: "/mnt/secrets"
+              readOnly: true
+            {{- end }}
+          {{- if .Values.secretManager.enabled }}
+          env:
+            - name: SPRING_CLOUD_GCP_CREDENTIALS_LOCATION
+              value: "file:/mnt/secrets/product-svc-account-credentials"
+            {{- if .Values.secretManager.envFrom }}
+            {{- range .Values.secretManager.envFrom }}
+            {{- if .secretKey }}
+            - name: {{ .env }}
+              valueFrom:
+                secretKeyRef:
+                  name: product-service-secrets
+                  key: {{ .secretKey }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
         {{- if .Values.filebeat.enabled }}
         - name: filebeat
           image: "{{ .Values.filebeat.image.repository }}:{{ .Values.filebeat.image.tag }}"
@@ -82,9 +103,19 @@ spec:
       volumes:
         - name: log-volume
           emptyDir: {}
+        {{- if .Values.filebeat.enabled }}
         - name: filebeat-config
           configMap:
             name: filebeat-config
+        {{- end }}
+        {{- if .Values.secretManager.enabled }}
+        - name: secrets-store
+          csi:
+            driver: secrets-store-gke.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: product-service-secrets
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
