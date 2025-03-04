@@ -23,14 +23,16 @@ fullnameOverride: "profile-service"
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
   # Specifies whether a service account should be created
-  create: false
+  create: true
   # Automatically mount a ServiceAccount's API credentials?
   automount: true
   # Annotations to add to the service account
-  annotations: {}
+  annotations: {
+      iam.gke.io/gcp-service-account : profile-service-sa@shopsmartsg-451708.iam.gserviceaccount.com
+  }
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: "ss-postgres-cloudsql-ksa"
+  name: "profile-service-ksa"
 
 # This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
@@ -140,7 +142,7 @@ affinity:
                 - "ss1"
 
 filebeat:
-  enabled: false
+  enabled: true
   image:
     repository: docker.elastic.co/beats/filebeat
     tag: 7.14.1
