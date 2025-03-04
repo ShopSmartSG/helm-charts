@@ -150,3 +150,13 @@ filebeat:
 
 cloudsqlproxy:
   enabled: true
+
+secretManager:
+  enabled: true
+  projectId: "shopsmartsg-451708"
+  secrets:
+    - name: "delivery-service-database-password"
+      path: "database-password"
+  envFrom:
+    - env: "SPRING_DATASOURCE_PASSWORD"
+      secretKey: "database-password"
