@@ -150,3 +150,17 @@ filebeat:
 cloudsqlproxy:
   enabled: true
   serviceAccountName: "ss-postgres-cloudsql-ksa"
+
+secretManager:
+  enabled: true
+  projectId: "shopsmartsg-451708"
+  secrets:
+    - name: "profile-service-db-password"
+      path: "db-password"
+    - name: "profile-service-encryption-key"
+      path: "encryption-key"
+  envFrom:
+    - env: "SPRING_DATASOURCE_PASSWORD"
+      secretKey: "db-password"
+    - env: "ENCRYPTION_KEY"
+      secretKey: "encryption-key"
