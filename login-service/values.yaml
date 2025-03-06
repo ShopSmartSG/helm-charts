@@ -142,3 +142,17 @@ filebeat:
   image:
     repository: docker.elastic.co/beats/filebeat
     tag: 7.14.1
+
+secretManager:
+  enabled: true
+  projectId: "shopsmartsg-451708"
+  secrets:
+    - name: "login-service-user-database-password"
+      path: "user-database-password"
+    - name: "login-service-otp-database-password"
+      path: "otp-database-password"
+  envFrom:
+    - env: "USER_DB_PASSWORD"
+      secretKey: "user-database-password"
+    - env: "OTP_DB_PASSWORD"
+      secretKey: "otp-database-password"

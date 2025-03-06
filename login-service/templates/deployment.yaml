@@ -53,6 +53,21 @@ spec:
           volumeMounts:
             - name: log-volume
               mountPath: /var/log/login-service
+            {{- if .Values.secretManager.enabled }}
+            - name: secrets-store
+              mountPath: "/mnt/secrets"
+              readOnly: true
+            {{- end }}
+          {{- if and .Values.secretManager.enabled .Values.secretManager.envFrom }}
+          env:
+            {{- range .Values.secretManager.envFrom }}
+            - name: {{ .env }}
+              valueFrom:
+                secretKeyRef:
+                  name: login-service-secrets
+                  key: {{ .secretKey }}
+            {{- end }}
+          {{- end }}
         {{- if .Values.filebeat.enabled }}
         - name: filebeat
           image: "{{ .Values.filebeat.image.repository }}:{{ .Values.filebeat.image.tag }}"
@@ -68,9 +83,19 @@ spec:
       volumes:
         - name: log-volume
           emptyDir: {}
+        {{- if .Values.filebeat.enabled }}
         - name: filebeat-config
           configMap:
             name: filebeat-config
+        {{- end }}
+        {{- if .Values.secretManager.enabled }}
+        - name: secrets-store
+          csi:
+            driver: secrets-store-gke.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: login-service-secrets
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

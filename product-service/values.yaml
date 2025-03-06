@@ -146,7 +146,7 @@ affinity:
                 - "ss1"
 
 filebeat:
-  enabled: false
+  enabled: true
   image:
     repository: docker.elastic.co/beats/filebeat
     tag: 7.14.1
