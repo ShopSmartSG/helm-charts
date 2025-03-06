@@ -172,3 +172,22 @@ redis:
   cert:
     enabled: true
     secretName: redis-ca-cert
+
+secretManager:
+  enabled: true
+  projectId: "shopsmartsg-451708"
+  secrets:
+    - name: "central-hub-oauth2-client-id"
+      path: "oauth2-client-id"
+    - name: "central-hub-oauth2-client-secret"
+      path: "oauth2-client-secret"
+    - name: "central-hub-gcip-api-key"
+      path: "gcip-api-key"
+
+  envFrom:
+    - env: "OAUTH2_CLIENT_ID"
+      secretKey: "oauth2-client-id"
+    - env: "OAUTH2_CLIENT_SECRET"
+      secretKey: "oauth2-client-secret"
+    - env: "GCIP_API_KEY"
+      secretKey: "gcip-api-key"
