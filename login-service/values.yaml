@@ -151,8 +151,12 @@ secretManager:
       path: "user-database-password"
     - name: "login-service-otp-database-password"
       path: "otp-database-password"
+    - name: "login-service-spring-password"
+      path: "mail-password"
   envFrom:
     - env: "USER_DB_PASSWORD"
       secretKey: "user-database-password"
     - env: "OTP_DB_PASSWORD"
       secretKey: "otp-database-password"
+    - env: "MAIL_PASSWORD"
+      secretKey: "mail-password"
