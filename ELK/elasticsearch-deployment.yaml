@@ -12,6 +12,72 @@ spec:
       labels:
         app: elasticsearch
     spec:
+      serviceAccountName: kibana-sa  # Use your existing service account
+      initContainers:
+        - name: setup-keystore
+          image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+          command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              # Create a fresh keystore
+              rm -f /usr/share/elasticsearch/config/elasticsearch.keystore
+              elasticsearch-keystore create
+              # Add the client secret to the keystore from the mounted secret
+              cat /mnt/secrets-store/elasticsearch-oidc-client-secret | elasticsearch-keystore add --stdin xpack.security.authc.realms.oidc.google.rp.client_secret
+              # Set permissions so the elasticsearch user can read it
+              chmod 660 /usr/share/elasticsearch/config/elasticsearch.keystore
+              # Copy to a shared volume
+              cp /usr/share/elasticsearch/config/elasticsearch.keystore /shared-keystore/
+          volumeMounts:
+            - name: shared-keystore
+              mountPath: /shared-keystore
+            - name: secrets-store-inline
+              mountPath: /mnt/secrets-store
+              readOnly: true
+        - name: setup-truststore
+          image: openjdk:11-jdk-slim
+          command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              set -e
+              
+              echo "Starting truststore setup..."
+              mkdir -p /shared-truststore
+              
+              # Simply copy the default Java cacerts as our truststore
+              # This already contains all the root certificates needed for Google APIs
+              echo "Copying default Java cacerts as truststore..."
+              cp $JAVA_HOME/lib/security/cacerts /shared-truststore/truststore.jks
+              
+              echo "Truststore created successfully at /shared-truststore/truststore.jks"
+              echo "Certificate count in truststore:"
+              keytool -list -keystore /shared-truststore/truststore.jks -storepass changeit | grep -c "trustedCertEntry" || echo "Failed to count certificates"
+          volumeMounts:
+            - name: shared-truststore
+              mountPath: /shared-truststore
+        - name: setup-bootstrap-password
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              #!/bin/sh
+              # Create bootstrap password file
+              echo "Setting up bootstrap password..."
+              mkdir -p /usr/share/elasticsearch/config/bootstrap
+              cat /mnt/secrets-store/elasticsearch-password > /usr/share/elasticsearch/config/bootstrap/bootstrap.password
+              chmod 600 /usr/share/elasticsearch/config/bootstrap/bootstrap.password
+              cp -r /usr/share/elasticsearch/config/bootstrap /shared-bootstrap/
+          volumeMounts:
+            - name: shared-bootstrap
+              mountPath: /shared-bootstrap
+            - name: secrets-store-inline
+              mountPath: /mnt/secrets-store
+              readOnly: true
       containers:
         - name: elasticsearch
           image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
@@ -30,22 +96,62 @@ spec:
             - name: network.host
               value: "0.0.0.0"
             - name: ELASTIC_PASSWORD
-              value: "JCqMRkJeXOH8NLVKCYcf"
+              valueFrom:
+                secretKeyRef:
+                  name: elk-credentials
+                  key: elasticsearch-password
             - name: xpack.security.enabled
               value: "true"
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: "purpose"
-                    operator: In
-                    values:
-                      - "elk"
-                  - key: "set"
-                    operator: In
-                    values:
-                      - "ss-elk"
+            - name: xpack.security.http.ssl.enabled
+              value: "false"
+            - name: ES_JAVA_OPTS
+              value: "-Djavax.net.ssl.trustStore=/usr/share/elasticsearch/config/truststore/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit"
+            - name: KIBANA_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: elk-credentials
+                  key: kibana-oauth-client-id
+          command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              # Copy the keystore from the shared volume
+              cp /shared-keystore/elasticsearch.keystore /usr/share/elasticsearch/config/
+              # Copy the bootstrap password file
+              mkdir -p /usr/share/elasticsearch/config/bootstrap
+              cp /shared-bootstrap/bootstrap.password /usr/share/elasticsearch/config/bootstrap/
+              # Start Elasticsearch
+              /usr/local/bin/docker-entrypoint.sh
+          volumeMounts:
+            - name: elasticsearch-config
+              mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+              subPath: elasticsearch.yml
+            - name: shared-keystore
+              mountPath: /shared-keystore
+            - name: shared-truststore
+              mountPath: /usr/share/elasticsearch/config/truststore
+            - name: shared-bootstrap
+              mountPath: /shared-bootstrap
+            - name: secrets-store-inline
+              mountPath: /mnt/secrets-store
+              readOnly: true
+      volumes:
+        - name: elasticsearch-config
+          configMap:
+            name: elasticsearch-config
+        - name: shared-keystore
+          emptyDir: {}
+        - name: shared-truststore
+          emptyDir: {}
+        - name: shared-bootstrap
+          emptyDir: {}
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store-gke.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: elk-secrets
 ---
 apiVersion: v1
 kind: Service
@@ -64,4 +170,3 @@ spec:
       targetPort: 9300
       nodePort: 30010
   type: NodePort
-

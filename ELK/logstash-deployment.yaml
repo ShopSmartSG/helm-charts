@@ -12,6 +12,7 @@ spec:
       labels:
         app: logstash
     spec:
+      serviceAccountName: kibana-sa  # Use your existing service account
       containers:
         - name: logstash
           image: docker.elastic.co/logstash/logstash:7.14.1
@@ -24,7 +25,10 @@ spec:
             - name: ELASTICSEARCH_USERNAME
               value: "elastic"
             - name: ELASTICSEARCH_PASSWORD
-              value: "JCqMRkJeXOH8NLVKCYcf"
+              valueFrom:
+                secretKeyRef:
+                  name: elk-credentials
+                  key: elasticsearch-password
             - name: LS_JAVA_OPTS
               value: "-Xmx512m -Xms512m"
             - name: XPACK_MONITORING_ELASTICSEARCH_HOSTS
@@ -32,23 +36,16 @@ spec:
             - name: XPACK_MONITORING_ELASTICSEARCH_USERNAME
               value: "elastic"
             - name: XPACK_MONITORING_ELASTICSEARCH_PASSWORD
-              value: "JCqMRkJeXOH8NLVKCYcf"
+              valueFrom:
+                secretKeyRef:
+                  name: elk-credentials
+                  key: elasticsearch-password
           volumeMounts:
             - name: config-volume
               mountPath: /usr/share/logstash/pipeline/
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: "purpose"
-                    operator: In
-                    values:
-                      - "elk"
-                  - key: "set"
-                    operator: In
-                    values:
-                      - "ss-elk"
+            - name: secrets-store-inline
+              mountPath: /mnt/secrets-store
+              readOnly: true
       volumes:
         - name: config-volume
           configMap:
@@ -56,6 +53,12 @@ spec:
             items:
               - key: logstash-profile-service.conf
                 path: logstash.conf
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store-gke.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: elk-secrets
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -82,7 +85,7 @@ data:
           elasticsearch {
             hosts => ["elasticsearch:9200"]
             user => "elastic"
-            password => "JCqMRkJeXOH8NLVKCYcf"
+            password => "${ELASTICSEARCH_PASSWORD}"
             index => "gcp-infra-firewall-%{+YYYY.MM.dd}"
             ssl => false
           }
@@ -90,7 +93,7 @@ data:
           elasticsearch {
             hosts => ["elasticsearch:9200"]
             user => "elastic"
-            password => "JCqMRkJeXOH8NLVKCYcf"
+            password => "${ELASTICSEARCH_PASSWORD}"
             index => "gcp-infra-vpcflow-%{+YYYY.MM.dd}"
             ssl => false
           }
@@ -98,7 +101,7 @@ data:
           elasticsearch {
             hosts => ["elasticsearch:9200"]
             user => "elastic"
-            password => "JCqMRkJeXOH8NLVKCYcf"
+            password => "${ELASTICSEARCH_PASSWORD}"
             index => "gcp-infra-audit-%{+YYYY.MM.dd}"
             ssl => false
           }
@@ -149,7 +152,7 @@ data:
           elasticsearch {
             hosts => ["elasticsearch:9200"]
             user => "elastic"
-            password => "JCqMRkJeXOH8NLVKCYcf"
+            password => "${ELASTICSEARCH_PASSWORD}"
             index => "gcp-infra-firewall-%{+YYYY.MM.dd}"
             ssl => false
           }
@@ -157,7 +160,7 @@ data:
           elasticsearch {
             hosts => ["elasticsearch:9200"]
             user => "elastic"
-            password => "JCqMRkJeXOH8NLVKCYcf"
+            password => "${ELASTICSEARCH_PASSWORD}"
             index => "gcp-infra-vpcflow-%{+YYYY.MM.dd}"
             ssl => false
           }
@@ -165,7 +168,7 @@ data:
           elasticsearch {
             hosts => ["elasticsearch:9200"]
             user => "elastic"
-            password => "JCqMRkJeXOH8NLVKCYcf"
+            password => "${ELASTICSEARCH_PASSWORD}"
             index => "gcp-infra-audit-%{+YYYY.MM.dd}"
             ssl => false
           }
@@ -173,7 +176,7 @@ data:
       } else if [fields][service] == "profile-service" {
         elasticsearch {
           user => "elastic"
-          password => "JCqMRkJeXOH8NLVKCYcf"
+          password => "${ELASTICSEARCH_PASSWORD}"
           hosts => ["elasticsearch:9200"]
           index => "profile-service-logs"
           action => "create"
@@ -182,7 +185,7 @@ data:
       } else if [fields][service] == "utility-service" {
         elasticsearch {
           user => "elastic"
-          password => "JCqMRkJeXOH8NLVKCYcf"
+          password => "${ELASTICSEARCH_PASSWORD}"
           hosts => ["elasticsearch:9200"]
           index => "utility-service-logs"
           action => "create"
@@ -191,7 +194,7 @@ data:
       } else if [fields][service] == "central-hub" {
         elasticsearch {
           user => "elastic"
-          password => "JCqMRkJeXOH8NLVKCYcf"
+          password => "${ELASTICSEARCH_PASSWORD}"
           hosts => ["elasticsearch:9200"]
           index => "central-hub-logs"
           action => "create"
@@ -200,7 +203,7 @@ data:
       } else if [fields][service] == "product-service" {
         elasticsearch {
           user => "elastic"
-          password => "JCqMRkJeXOH8NLVKCYcf"
+          password => "${ELASTICSEARCH_PASSWORD}"
           hosts => ["elasticsearch:9200"]
           index => "product-service-logs"
           action => "create"
@@ -209,7 +212,7 @@ data:
       } else if [fields][service] == "order-service" {
         elasticsearch {
           user => "elastic"
-          password => "JCqMRkJeXOH8NLVKCYcf"
+          password => "${ELASTICSEARCH_PASSWORD}"
           hosts => ["elasticsearch:9200"]
           index => "order-service-logs"
           action => "create"
@@ -218,7 +221,7 @@ data:
       } else if [fields][service] == "otp-service" {
         elasticsearch {
           user => "elastic"
-          password => "JCqMRkJeXOH8NLVKCYcf"
+          password => "${ELASTICSEARCH_PASSWORD}"
           hosts => ["elasticsearch:9200"]
           index => "otp-service-logs"
           action => "create"
@@ -228,7 +231,7 @@ data:
         # Catch-all for unmatched logs
         elasticsearch {
           user => "elastic"
-          password => "JCqMRkJeXOH8NLVKCYcf"
+          password => "${ELASTICSEARCH_PASSWORD}"
           hosts => ["elasticsearch:9200"]
           index => "unmatched-logs-%{+YYYY.MM.dd}"
           action => "create"

@@ -12,101 +12,85 @@ spec:
       labels:
         app: kibana
     spec:
+      serviceAccountName: kibana-sa
       containers:
         - name: kibana
           image: docker.elastic.co/kibana/kibana:7.10.0
           ports:
             - containerPort: 5601
           env:
-            - name: SERVER_HOST
-              value: "0.0.0.0"
-            - name: SERVER_SSL_ENABLED
-              value: "true"
-            - name: SERVER_SSL_CERTIFICATE
-              value: "/usr/share/kibana/config/certs/tls.crt"
-            - name: SERVER_SSL_KEY
-              value: "/usr/share/kibana/config/certs/tls.key"
-            - name: SERVER_PUBLICBASEURL
-              value: "https://localhost:5601"
             - name: ELASTICSEARCH_HOSTS
               value: "http://elasticsearch:9200"
             - name: ELASTICSEARCH_USERNAME
               value: "kibana_system"
             - name: ELASTICSEARCH_PASSWORD
-              value: "NewPassword123"
-            - name: ELASTICSEARCH_SSL_VERIFICATIONMODE
-              value: "none"
-            - name: XPACK_SECURITY_ENABLED
-              value: "true"
-            - name: XPACK_SECURITY_AUTHC_PROVIDERS
-              value: '["basic"]'
-            - name: XPACK_SECURITY_PUBLIC_PROTOCOL
-              value: "https"
-            - name: XPACK_SECURITY_LOGINASSISTANCE_ENABLED
-              value: "true"
-            - name: XPACK_SECURITY_AUTHC_SELECTOR_ENABLED
-              value: "true"
-            - name: SERVER_HEALTHCHECK_ALLOWANONYMOUS
-              value: "true"
-            - name: XPACK_SECURITY_COOKIE_SECURE
-              value: "true"
-            - name: XPACK_SECURITY_SESSION_IDLETIMEOUT
-              value: "1h"
-            - name: XPACK_SECURITY_SESSION_LIFESPAN
-              value: "24h"
-            - name: XPACK_CSP_RULES
-              value: "script-src 'self' 'unsafe-eval' 'unsafe-inline'; connect-src 'self' http://localhost:5601 https://localhost:5601"
-            - name: XPACK_CSP_STRICT
-              value: "false"
-            - name: LOGGING_ROOT_LEVEL
-              value: "debug"
-          resources:
-            limits:
-              cpu: "500m"
-              memory: "512Mi"
-            requests:
-              cpu: "250m"
-              memory: "256Mi"
-          readinessProbe:
-            httpGet:
-              path: /api/status
-              port: 5601
-              scheme: HTTPS
-              httpHeaders:
-                - name: Authorization
-                  value: "Basic ZWxhc3RpYzpKQ3FNUmtKZVhPSDhOTFZLQ1ljZg=="
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            failureThreshold: 3
-          livenessProbe:
-            httpGet:
-              path: /api/status
-              port: 5601
-              scheme: HTTPS
-              httpHeaders:
-                - name: Authorization
-                  value: "Basic ZWxhc3RpYzpKQ3FNUmtKZVhPSDhOTFZLQ1ljZg=="
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            failureThreshold: 3
-          startupProbe:
-            httpGet:
-              path: /api/status
-              port: 5601
-              scheme: HTTPS
-              httpHeaders:
-                - name: Authorization
-                  value: "Basic ZWxhc3RpYzpKQ3FNUmtKZVhPSDhOTFZLQ1ljZg=="
-            failureThreshold: 30
-            periodSeconds: 10
+              valueFrom:
+                secretKeyRef:
+                  name: elk-credentials
+                  key: kibana-elasticsearch-password
+            - name: KIBANA_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: elk-credentials
+                  key: kibana-oauth-client-id
+            - name: KIBANA_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: elk-credentials
+                  key: kibana-oauth-client-secret
+            - name: XPACK_SECURITY_ENCRYPTIONKEY
+              valueFrom:
+                secretKeyRef:
+                  name: elk-credentials
+                  key: xpack-security-encryption-key
+            - name: XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY
+              valueFrom:
+                secretKeyRef:
+                  name: elk-credentials
+                  key: xpack-encrypted-saved-objects-encryption-key
+            - name: XPACK_REPORTING_ENCRYPTIONKEY
+              valueFrom:
+                secretKeyRef:
+                  name: elk-credentials
+                  key: xpack-reporting-encryption-key
+            - name: NODE_TLS_REJECT_UNAUTHORIZED
+              value: "0"
           volumeMounts:
             - name: kibana-certs
               mountPath: /usr/share/kibana/config/certs
               readOnly: true
+            - name: ca-cert
+              mountPath: /usr/share/kibana/config/ca
+              readOnly: true
+            - name: kibana-config
+              mountPath: /usr/share/kibana/config/kibana.yml
+              subPath: kibana.yml
+            - name: secrets-store-inline
+              mountPath: /mnt/secrets-store
+              readOnly: true
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
       volumes:
         - name: kibana-certs
           secret:
-            secretName: kibana-tls
+            secretName: kibana-localhost-tls
+        - name: ca-cert
+          secret:
+            secretName: local-ca
+        - name: kibana-config
+          configMap:
+            name: kibana-config
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store-gke.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: elk-secrets
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

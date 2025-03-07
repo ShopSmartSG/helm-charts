@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch-config
+data:
+  elasticsearch.yml: |
+    # Basic Elasticsearch configuration
+    cluster.name: "docker-cluster"
+    network.host: 0.0.0.0
+    discovery.type: single-node
+    
+    # Security settings
+    xpack.security.enabled: true
+    xpack.security.http.ssl.enabled: false
+    xpack.security.authc.token.enabled: true
+    
+    # OIDC Realm configuration
+    xpack.security.authc.realms.oidc.google.order: 1
+    xpack.security.authc.realms.oidc.google.enabled: true
+    xpack.security.authc.realms.oidc.google.rp.client_id: "${KIBANA_OAUTH_CLIENT_ID}"
+    # Client secret is loaded from Secret Manager via keystore
+    xpack.security.authc.realms.oidc.google.rp.response_type: "code"
+    xpack.security.authc.realms.oidc.google.rp.redirect_uri: "https://localhost:5601/api/security/oidc/callback"
+    xpack.security.authc.realms.oidc.google.op.issuer: "https://accounts.google.com"
+    xpack.security.authc.realms.oidc.google.op.authorization_endpoint: "https://accounts.google.com/o/oauth2/v2/auth"
+    xpack.security.authc.realms.oidc.google.op.token_endpoint: "https://oauth2.googleapis.com/token"
+    xpack.security.authc.realms.oidc.google.op.userinfo_endpoint: "https://openidconnect.googleapis.com/v1/userinfo"
+    xpack.security.authc.realms.oidc.google.op.jwkset_path: "https://www.googleapis.com/oauth2/v3/certs"
+    xpack.security.authc.realms.oidc.google.claims.principal: "sub"
+    
+    # Add requested scopes to explicitly request email
+    xpack.security.authc.realms.oidc.google.rp.requested_scopes: ["openid", "email", "profile"]
+    
+    # Truststore configuration for OIDC
+    xpack.security.authc.realms.oidc.google.ssl.truststore.path: /usr/share/elasticsearch/config/truststore/truststore.jks
+    xpack.security.authc.realms.oidc.google.ssl.truststore.password: changeit
+    xpack.security.authc.realms.oidc.google.ssl.verification_mode: full
+    
+    # Enable detailed logging for troubleshooting
+    logger.org.elasticsearch.xpack.security.authc.oidc: DEBUG
+    logger.org.elasticsearch.xpack.security.authc.jwt: DEBUG
