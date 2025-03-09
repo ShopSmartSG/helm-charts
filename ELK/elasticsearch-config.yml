@@ -27,6 +27,9 @@ data:
     xpack.security.authc.realms.oidc.google.op.userinfo_endpoint: "https://openidconnect.googleapis.com/v1/userinfo"
     xpack.security.authc.realms.oidc.google.op.jwkset_path: "https://www.googleapis.com/oauth2/v3/certs"
     xpack.security.authc.realms.oidc.google.claims.principal: "sub"
+    xpack.security.authc.realms.oidc.google.claims.name: "name"
+    xpack.security.authc.realms.oidc.google.claims.mail: "email"
+    xpack.security.authc.realms.oidc.google.claims.groups: "groups"
     
     # Add requested scopes to explicitly request email
     xpack.security.authc.realms.oidc.google.rp.requested_scopes: ["openid", "email", "profile"]
