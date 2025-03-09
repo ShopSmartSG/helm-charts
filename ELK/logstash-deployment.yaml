@@ -218,16 +218,25 @@ data:
           action => "create"
           ssl => false
         }
-      } else if [fields][service] == "otp-service" {
+      } else if [fields][service] == "login-service" {
         elasticsearch {
           user => "elastic"
           password => "${ELASTICSEARCH_PASSWORD}"
           hosts => ["elasticsearch:9200"]
-          index => "otp-service-logs"
+          index => "login-service-logs"
           action => "create"
           ssl => false
         }
-      } else {
+      } else if [fields][service] == "delivery-service" {
+        elasticsearch {
+          user => "elastic"
+          password => "${ELASTICSEARCH_PASSWORD}"
+          hosts => ["elasticsearch:9200"]
+          index => "delivery-service-logs"
+          action => "create"
+          ssl => false
+        }
+      }else {
         # Catch-all for unmatched logs
         elasticsearch {
           user => "elastic"

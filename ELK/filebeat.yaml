@@ -43,9 +43,16 @@ data:
       - type: log
         enabled: true
         paths:
-          - /var/log/otp-service/otp-service.log  # New log path for otp-service
+          - /var/log/login-service/login-service.log  # New log path for login-service
         fields:
-          service: otp-service
+          service: login-service
+    
+      - type: log
+        enabled: true
+        paths:
+          - /var/log/delivery-service/delivery-service.log  # New log path for delivery-service
+        fields:
+          service: delivery-service
 
     output.logstash:
       hosts: ["logstash:5044"]
